@@ -1,0 +1,45 @@
+# Servilion Entregas
+
+Aplicación Android offline-first para registrar la entrega de morrales en faena. Está construida con Expo, React Native y TypeScript.
+
+## Flujos
+
+- **Flujo 1, habitación:** escanea el QR de la boleta/OT y después el QR de la habitación. Si la puerta no coincide con el destino congelado en la guía, muestra ambas habitaciones y exige una segunda confirmación para registrar de todas maneras.
+- **Flujo 2, cliente:** escanea sólo el QR del morral, informa que la entrega es al cliente y registra el hito final sin habitación.
+- Ambos flujos exigen ubicación precisa. Sin permiso, GPS activo y una lectura con precisión disponible, la entrega no se guarda.
+
+## Operación offline
+
+Al iniciar sesión con conexión, la app descarga todas las guías `DESPACHADA` y las habitaciones activas. La sesión JWT se guarda en `SecureStore`; el catálogo y las entregas se almacenan en SQLite.
+
+Cada entrega recibe un `client_uuid` antes de intentar enviarse. El mismo UUID se reutiliza en todos los reintentos, por lo que perder la respuesta del servidor no duplica el registro. Al recuperar conexión, la app envía primero la cola y luego refresca el catálogo.
+
+Las entregas sincronizadas se conservan **30 días**, suficiente para cubrir dos rotaciones 14x14 y permitir revisión local. Las entregas pendientes o fallidas nunca se eliminan automáticamente.
+
+## Desarrollo
+
+```powershell
+npm install
+npm run typecheck
+npm run android
+```
+
+En el emulador Android, el backend local se alcanza en `http://10.0.2.2:8000`. En un teléfono físico se debe ingresar la IP LAN del equipo que ejecuta Django, por ejemplo `http://192.168.1.20:8000`, y permitirla en `ALLOWED_HOSTS`.
+
+Los usuarios admitidos son `SUPERVISOR` y `ADMIN`. El primer inicio de sesión requiere internet; después puede continuarse con la sesión y el catálogo guardados.
+
+## Empaquetado
+
+```powershell
+npm run export:android
+```
+
+Para generar un APK/AAB instalable se debe configurar EAS Build o generar el proyecto nativo con `npx expo prebuild`. Los permisos de cámara y ubicación ya están declarados en `app.json`.
+
+## Estructura
+
+- `src/api.ts`: login, refresh JWT, descarga paginada y envío de entregas.
+- `src/database.ts`: esquema SQLite, caché, cola y retención.
+- `src/sync.ts`: sincronización de pendientes y catálogo.
+- `src/screens/DeliveryScreen.tsx`: máquina de estados de ambos flujos, QR y GPS.
+- `src/session.ts`: credenciales cifradas con SecureStore.

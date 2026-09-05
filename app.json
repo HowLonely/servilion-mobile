@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "servilion-mobile",
+    "name": "Servilion Entregas",
     "slug": "servilion-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -10,6 +10,12 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "cl.servilion.entregas",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -20,6 +26,29 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-sqlite",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Servilion necesita la cámara para leer los QR del morral y la habitación.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Servilion necesita tu ubicación para registrar dónde se realizó cada entrega."
+        }
+      ],
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "8590cb27-a6f9-45eb-9fed-8ced1bd95a81"
+      }
     }
   }
 }
