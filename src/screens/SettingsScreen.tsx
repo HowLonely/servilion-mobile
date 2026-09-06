@@ -8,8 +8,10 @@ import type { Session } from '../types';
 export function SettingsScreen({ session, lastSync, onLogout }: { session: Session; lastSync: string | null; onLogout: () => void }) {
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      <Text style={styles.kicker}>CONFIGURACIÓN</Text>
-      <Text style={styles.title}>Este equipo</Text>
+      <View style={styles.header}>
+        <Text style={styles.kicker}>CONFIGURACIÓN</Text>
+        <Text style={styles.title}>Este equipo</Text>
+      </View>
       <View style={styles.section}>
         <Info icon={UserRound} label="Sesión" value={`${session.user.first_name} ${session.user.last_name}`.trim() || session.user.username} />
         <Info icon={Server} label="Servidor" value={session.apiUrl} />
@@ -27,22 +29,24 @@ export function SettingsScreen({ session, lastSync, onLogout }: { session: Sessi
 function Info({ icon: Icon, label, value }: { icon: typeof UserRound; label: string; value: string }) {
   return (
     <View style={styles.info}>
-      <Icon size={22} color={colors.green} />
+      <View style={styles.infoIcon}><Icon size={20} color={colors.primary} /></View>
       <View style={styles.infoCopy}><Text style={styles.label}>{label}</Text><Text style={styles.value}>{value}</Text></View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, paddingTop: 58, paddingHorizontal: 20, paddingBottom: 32, backgroundColor: colors.paper, gap: 18 },
-  kicker: { color: colors.green, fontFamily: fonts.bodyMedium, fontSize: 13 },
-  title: { color: colors.ink, fontFamily: fonts.display, fontSize: 38, lineHeight: 40, marginTop: -14 },
-  section: { borderTopWidth: 1, borderTopColor: colors.line },
-  info: { paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: colors.line, flexDirection: 'row', gap: 12 },
+  content: { flexGrow: 1, paddingTop: 20, paddingHorizontal: 16, paddingBottom: 24, backgroundColor: colors.paper, gap: 14 },
+  header: { marginBottom: 4 },
+  kicker: { color: colors.primary, fontFamily: fonts.bodyMedium, fontSize: 13 },
+  title: { color: colors.ink, fontFamily: fonts.display, fontSize: 30, lineHeight: 35 },
+  section: { paddingHorizontal: 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, borderRadius: 10 },
+  info: { paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: colors.line, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  infoIcon: { width: 38, height: 38, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primarySoft },
   infoCopy: { flex: 1 },
   label: { color: colors.muted, fontFamily: fonts.bodyMedium, fontSize: 13 },
   value: { color: colors.ink, fontFamily: fonts.bodyMedium, fontSize: 16, marginTop: 2 },
-  policy: { padding: 16, borderLeftWidth: 4, borderLeftColor: colors.lime, backgroundColor: colors.surface },
+  policy: { padding: 16, borderWidth: 1, borderColor: colors.line, borderLeftWidth: 4, borderLeftColor: colors.primary, borderRadius: 8, backgroundColor: colors.surface },
   policyTitle: { color: colors.ink, fontFamily: fonts.bodyMedium, fontSize: 17 },
   policyText: { color: colors.inkSoft, fontFamily: fonts.body, fontSize: 15, lineHeight: 21, marginTop: 4 },
 });

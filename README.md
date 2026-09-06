@@ -21,12 +21,19 @@ Las entregas sincronizadas se conservan **30 días**, suficiente para cubrir dos
 ```powershell
 npm install
 npm run typecheck
-npm run android
+npm start
 ```
 
-En el emulador Android, el backend local se alcanza en `http://10.0.2.2:8000`. En un teléfono físico se debe ingresar la IP LAN del equipo que ejecuta Django, por ejemplo `http://192.168.1.20:8000`, y permitirla en `ALLOWED_HOSTS`.
+No es necesario generar un APK para revisar la aplicación:
+
+- **Teléfono físico:** instala Expo Go, conecta el teléfono y el PC a la misma red Wi-Fi, ejecuta `npm start` y escanea el QR mostrado por Expo. Si la red bloquea conexiones LAN, usa `npx expo start --tunnel`.
+- **Emulador Android:** abre un dispositivo virtual desde Android Studio y ejecuta `npm run android`.
+
+El servidor de producción viene precargado como `https://api.34-228-25-198.nip.io`. En el emulador Android, un backend local se alcanza en `http://10.0.2.2:8000`. En un teléfono físico se debe ingresar la IP LAN del equipo que ejecuta Django, por ejemplo `http://192.168.1.20:8000`, y permitirla en `ALLOWED_HOSTS`.
 
 Los usuarios admitidos son `SUPERVISOR` y `ADMIN`. El primer inicio de sesión requiere internet; después puede continuarse con la sesión y el catálogo guardados.
+
+La interfaz usa las áreas seguras nativas en los cuatro bordes. En Android, la barra inferior queda por encima de los controles del sistema tanto con navegación gestual como con los tres botones tradicionales.
 
 ## Empaquetado
 

@@ -1,4 +1,3 @@
-import { BarlowCondensed_700Bold } from '@expo-google-fonts/barlow-condensed/700Bold';
 import { SourceSans3_400Regular } from '@expo-google-fonts/source-sans-3/400Regular';
 import { SourceSans3_600SemiBold } from '@expo-google-fonts/source-sans-3/600SemiBold';
 import { useFonts } from 'expo-font';
@@ -6,7 +5,8 @@ import * as Network from 'expo-network';
 import { StatusBar } from 'expo-status-bar';
 import { ClipboardList, Home, Settings } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { clearSession, loadSession } from './src/session';
 import { getLastCatalogSync, getPendingCount, initializeDatabase, listDeliveries } from './src/database';
@@ -22,7 +22,11 @@ import type { DeliveryRecord, Session } from './src/types';
 type Tab = 'HOME' | 'HISTORY' | 'SETTINGS';
 
 export default function App() {
-  const [fontsLoaded] = useFonts({ BarlowCondensed_700Bold, SourceSans3_400Regular, SourceSans3_600SemiBold });
+  return <SafeAreaProvider><AppContent /></SafeAreaProvider>;
+}
+
+function AppContent() {
+  const [fontsLoaded] = useFonts({ SourceSans3_400Regular, SourceSans3_600SemiBold });
   const [ready, setReady] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [tab, setTab] = useState<Tab>('HOME');
@@ -90,14 +94,21 @@ export default function App() {
   };
 
   if (!fontsLoaded || !ready) {
-    return <View style={styles.loading}><ActivityIndicator size="large" color={colors.green} /></View>;
+    return <View style={styles.loading}><ActivityIndicator size="large" color={colors.primary} /></View>;
   }
 
-  if (!session) return <LoginScreen onLogin={(value) => { setSession(value); setOnline(true); }} />;
+  if (!session) {
+    return (
+      <SafeAreaView style={styles.app} edges={['top', 'right', 'bottom', 'left']}>
+        <StatusBar style="dark" />
+        <LoginScreen onLogin={(value) => { setSession(value); setOnline(true); }} />
+      </SafeAreaView>
+    );
+  }
 
   if (delivering) {
     return (
-      <SafeAreaView style={styles.app}>
+      <SafeAreaView style={styles.app} edges={['top', 'right', 'bottom', 'left']}>
         <StatusBar style="light" />
         <DeliveryScreen
           session={session}
@@ -111,7 +122,7 @@ export default function App() {
   }
 
   return (
-    <SafeAreaView style={styles.app}>
+    <SafeAreaView style={styles.app} edges={['top', 'right', 'bottom', 'left']}>
       <StatusBar style="dark" />
       <View style={styles.content}>
         {tab === 'HOME' ? (
@@ -131,7 +142,7 @@ export default function App() {
           <SettingsScreen session={session} lastSync={lastSync} onLogout={() => { void logout(); }} />
         )}
       </View>
-      <View style={styles.nav}>
+      <View style={styles.nav} accessibilityRole="tablist">
         <NavItem label="Inicio" icon={Home} active={tab === 'HOME'} onPress={() => setTab('HOME')} />
         <NavItem label="Historial" icon={ClipboardList} active={tab === 'HISTORY'} onPress={() => setTab('HISTORY')} badge={pendingCount} />
         <NavItem label="Ajustes" icon={Settings} active={tab === 'SETTINGS'} onPress={() => setTab('SETTINGS')} />
@@ -148,26 +159,26 @@ function NavItem({ label, icon: Icon, active, onPress, badge = 0 }: {
   badge?: number;
 }) {
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={styles.navItem}>
-      <View>
-        <Icon size={23} color={active ? colors.ink : colors.muted} strokeWidth={active ? 2.5 : 2} />
+    <Pressable accessibilityRole="tab" accessibilityState={{ selected: active }} accessibilityLabel={label} onPress={onPress} style={styles.navItem}>
+      <View style={[styles.navIcon, active && styles.navIconActive]}>
+        <Icon size={22} color={active ? colors.primary : colors.muted} strokeWidth={active ? 2.5 : 2} />
         {badge > 0 ? <View style={styles.badge}><Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text></View> : null}
       </View>
       <Text style={[styles.navLabel, active && styles.navLabelActive]}>{label}</Text>
-      {active ? <View style={styles.navIndicator} /> : null}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  app: { flex: 1, backgroundColor: colors.paper },
+  app: { flex: 1, backgroundColor: colors.surface },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.paper },
-  content: { flex: 1 },
+  content: { flex: 1, backgroundColor: colors.paper },
   nav: { height: 68, flexDirection: 'row', backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.line },
-  navItem: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, position: 'relative' },
+  navItem: { flex: 1, minHeight: 58, alignItems: 'center', justifyContent: 'center', gap: 2, position: 'relative' },
+  navIcon: { width: 40, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  navIconActive: { backgroundColor: colors.primarySoft },
   navLabel: { color: colors.muted, fontFamily: fonts.bodyMedium, fontSize: 12 },
-  navLabelActive: { color: colors.ink },
-  navIndicator: { position: 'absolute', top: 0, width: 34, height: 3, backgroundColor: colors.lime },
-  badge: { position: 'absolute', top: -7, right: -14, minWidth: 20, height: 20, borderRadius: 10, backgroundColor: colors.coral, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center' },
+  navLabelActive: { color: colors.primary },
+  badge: { position: 'absolute', top: -5, right: -8, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: colors.danger, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center' },
   badgeText: { color: colors.surface, fontFamily: fonts.bodyMedium, fontSize: 10 },
 });

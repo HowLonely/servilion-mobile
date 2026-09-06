@@ -134,7 +134,8 @@ export function DeliveryScreen({ session, online, onSessionChange, onClose, onSa
   if (stage === 'LOCATING') {
     return (
       <View style={styles.center}>
-        <View style={styles.locator}><LocateFixed size={46} color={colors.green} /><ActivityIndicator color={colors.green} /></View>
+        <View style={styles.stateIcon}><LocateFixed size={42} color={colors.primary} /></View>
+        <ActivityIndicator color={colors.primary} />
         <Text style={styles.bigTitle}>Obteniendo ubicación</Text>
         <Text style={styles.body}>Espera una posición precisa antes de guardar la entrega.</Text>
       </View>
@@ -144,7 +145,7 @@ export function DeliveryScreen({ session, online, onSessionChange, onClose, onSa
   if (stage === 'DONE') {
     return (
       <View style={styles.center}>
-        <CheckCircle2 size={70} color={colors.green} />
+        <View style={[styles.stateIcon, styles.successIcon]}><CheckCircle2 size={48} color={colors.success} /></View>
         <Text style={styles.bigTitle}>Entrega registrada</Text>
         <Text style={styles.body}>{synced ? 'El servidor ya confirmó el registro.' : 'Quedó guardada en el equipo y se enviará al recuperar conexión.'}</Text>
         <Button label="Registrar otra entrega" icon={PackageCheck} onPress={() => { setOrder(null); setRoom(null); setStage('ORDER_SCAN'); }} />
@@ -160,9 +161,11 @@ export function DeliveryScreen({ session, online, onSessionChange, onClose, onSa
   return (
     <ScrollView contentContainerStyle={styles.review}>
       <View style={styles.reviewHeader}>
-        {isClientDelivery ? <Building2 size={34} color={colors.lime} /> : <MapPin size={34} color={colors.lime} />}
-        <Text style={styles.eyebrow}>{isClientDelivery ? 'FLUJO 2' : 'FLUJO 1'}</Text>
-        <Text style={styles.bigTitleLight}>{isClientDelivery ? 'Entrega al cliente' : 'Entrega en habitación'}</Text>
+        <View style={styles.reviewIcon}>{isClientDelivery ? <Building2 size={28} color={colors.primary} /> : <MapPin size={28} color={colors.primary} />}</View>
+        <View style={styles.reviewHeading}>
+          <Text style={styles.eyebrow}>{isClientDelivery ? 'FLUJO 2' : 'FLUJO 1'}</Text>
+          <Text style={styles.bigTitle}>{isClientDelivery ? 'Entrega al cliente' : 'Entrega en habitación'}</Text>
+        </View>
       </View>
       <View style={styles.details}>
         <Detail label="Morral" value={order.order_number || order.reference} />
@@ -179,7 +182,7 @@ export function DeliveryScreen({ session, online, onSessionChange, onClose, onSa
       </View>
       {mismatch ? (
         <View style={styles.warning}>
-          <AlertTriangle size={25} color={colors.amber} />
+          <AlertTriangle size={25} color={colors.warning} />
           <View style={styles.warningCopy}>
             <Text style={styles.warningTitle}>La habitación no coincide</Text>
             <Text style={styles.body}>Revisa ambas habitaciones. Si el trabajador cambió de pieza, debes confirmar una segunda vez para registrar de todas maneras.</Text>
@@ -204,22 +207,24 @@ function Detail({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  center: { flex: 1, padding: 28, justifyContent: 'center', gap: 16, backgroundColor: colors.paper },
-  locator: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  bigTitle: { color: colors.ink, fontFamily: fonts.display, fontSize: 38, lineHeight: 40 },
+  center: { flex: 1, padding: 28, justifyContent: 'center', alignItems: 'center', gap: 14, backgroundColor: colors.paper },
+  stateIcon: { width: 76, height: 76, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primarySoft },
+  successIcon: { backgroundColor: colors.successSoft },
+  bigTitle: { color: colors.ink, fontFamily: fonts.display, fontSize: 30, lineHeight: 35, textAlign: 'center' },
   body: { color: colors.inkSoft, fontFamily: fonts.body, fontSize: 17, lineHeight: 23 },
-  floatingError: { position: 'absolute', left: 16, right: 16, top: 130, padding: 12, borderRadius: 5, backgroundColor: colors.coralSoft },
+  floatingError: { position: 'absolute', left: 16, right: 16, top: 130, padding: 12, borderRadius: 8, backgroundColor: colors.dangerSoft },
   errorText: { color: '#8A2D1B', fontFamily: fonts.bodyMedium, fontSize: 15 },
-  review: { flexGrow: 1, backgroundColor: colors.paper, paddingBottom: 30 },
-  reviewHeader: { paddingTop: 66, paddingHorizontal: 22, paddingBottom: 24, backgroundColor: colors.ink },
-  eyebrow: { marginTop: 12, color: colors.lime, fontFamily: fonts.bodyMedium, fontSize: 13 },
-  bigTitleLight: { color: colors.surface, fontFamily: fonts.display, fontSize: 38, lineHeight: 40 },
-  details: { paddingHorizontal: 22, paddingVertical: 14 },
+  review: { flexGrow: 1, backgroundColor: colors.paper, padding: 16, paddingBottom: 24 },
+  reviewHeader: { padding: 16, flexDirection: 'row', alignItems: 'center', gap: 13, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, borderRadius: 10 },
+  reviewIcon: { width: 52, height: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primarySoft },
+  reviewHeading: { flex: 1 },
+  eyebrow: { color: colors.primary, fontFamily: fonts.bodyMedium, fontSize: 12 },
+  details: { marginVertical: 12, paddingHorizontal: 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, borderRadius: 10 },
   detailRow: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.line },
   detailLabel: { color: colors.muted, fontFamily: fonts.bodyMedium, fontSize: 13 },
   detailValue: { color: colors.ink, fontFamily: fonts.bodyMedium, fontSize: 19, marginTop: 2 },
-  warning: { marginHorizontal: 22, marginBottom: 16, padding: 14, borderLeftWidth: 4, borderLeftColor: colors.amber, backgroundColor: colors.amberSoft, flexDirection: 'row', gap: 11 },
+  warning: { marginBottom: 12, padding: 14, borderLeftWidth: 4, borderLeftColor: colors.warning, borderRadius: 8, backgroundColor: colors.warningSoft, flexDirection: 'row', gap: 11 },
   warningCopy: { flex: 1 },
   warningTitle: { color: colors.ink, fontFamily: fonts.bodyMedium, fontSize: 17, marginBottom: 3 },
-  errorBlock: { marginHorizontal: 22, marginBottom: 14, color: '#8A2D1B', backgroundColor: colors.coralSoft, padding: 12, fontFamily: fonts.bodyMedium },
+  errorBlock: { marginBottom: 12, color: colors.danger, backgroundColor: colors.dangerSoft, padding: 12, borderRadius: 8, fontFamily: fonts.bodyMedium },
 });

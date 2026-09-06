@@ -41,7 +41,7 @@ export function QrScanner({ title, instruction, onScanned, onCancel }: Props) {
   if (!permission.granted) {
     return (
       <View style={styles.permission}>
-        <Camera size={42} color={colors.coral} />
+        <Camera size={42} color={colors.primary} />
         <Text style={styles.permissionTitle}>Permiso de cámara</Text>
         <Text style={styles.copy}>La cámara es necesaria para identificar el morral y la habitación.</Text>
         <Button label="Permitir cámara" onPress={requestPermission} icon={Camera} />
@@ -96,24 +96,24 @@ export function QrScanner({ title, instruction, onScanned, onCancel }: Props) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#000' },
-  shade: { position: 'absolute', inset: 0, backgroundColor: 'rgba(8, 15, 11, 0.26)' },
+  shade: { position: 'absolute', inset: 0, backgroundColor: 'rgba(17, 20, 31, 0.30)' },
   topbar: {
-    paddingTop: 54,
-    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
   },
   titleWrap: { flex: 1, paddingRight: 12 },
-  step: { color: colors.lime, fontFamily: fonts.bodyMedium, fontSize: 14, textTransform: 'uppercase' },
-  instruction: { color: colors.surface, fontFamily: fonts.display, fontSize: 31, lineHeight: 34 },
+  step: { color: colors.primarySoft, fontFamily: fonts.bodyMedium, fontSize: 14, textTransform: 'uppercase' },
+  instruction: { color: colors.surface, fontFamily: fonts.display, fontSize: 27, lineHeight: 31 },
   iconButton: {
     width: 46,
     height: 46,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 23,
+    borderRadius: 10,
   },
   frame: {
     position: 'absolute',
@@ -124,18 +124,18 @@ const styles = StyleSheet.create({
     marginLeft: -130,
     marginTop: -130,
     borderWidth: 3,
-    borderColor: colors.lime,
-    borderRadius: 6,
+    borderColor: colors.primary,
+    borderRadius: 12,
     overflow: 'hidden',
   },
-  scanLine: { height: 3, backgroundColor: colors.coral, marginTop: 128 },
+  scanLine: { height: 3, backgroundColor: colors.primary, marginTop: 128 },
   manualPanel: {
     position: 'absolute',
     left: 16,
     right: 16,
-    bottom: 24,
+    bottom: 16,
     padding: 14,
-    borderRadius: 6,
+    borderRadius: 12,
     backgroundColor: colors.paper,
   },
   manualLabel: { color: colors.inkSoft, fontFamily: fonts.bodyMedium, fontSize: 13, marginBottom: 7 },
@@ -152,8 +152,8 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodyMedium,
     fontSize: 17,
   },
-  submitButton: { height: 48, paddingHorizontal: 18, justifyContent: 'center', backgroundColor: colors.lime, borderRadius: 4 },
-  submitText: { color: colors.ink, fontFamily: fonts.bodyMedium, fontSize: 16 },
+  submitButton: { height: 48, paddingHorizontal: 18, justifyContent: 'center', backgroundColor: colors.primary, borderRadius: 8 },
+  submitText: { color: colors.surface, fontFamily: fonts.bodyMedium, fontSize: 16 },
   permission: { flex: 1, padding: 28, justifyContent: 'center', gap: 16, backgroundColor: colors.paper },
   permissionTitle: { color: colors.ink, fontFamily: fonts.display, fontSize: 34 },
   copy: { color: colors.inkSoft, fontFamily: fonts.body, fontSize: 17, lineHeight: 24 },

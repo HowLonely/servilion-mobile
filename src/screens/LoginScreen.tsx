@@ -1,6 +1,6 @@
-import { LockKeyhole, Server, UserRound } from 'lucide-react-native';
+import { LockKeyhole, Server, UserRound, WashingMachine } from 'lucide-react-native';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { login } from '../api';
 import { colors, fonts } from '../theme';
@@ -10,7 +10,7 @@ import { Button } from '../components/ui';
 type Props = { onLogin: (session: Session) => void };
 
 export function LoginScreen({ onLogin }: Props) {
-  const [apiUrl, setApiUrl] = useState('http://10.0.2.2:8000');
+  const [apiUrl, setApiUrl] = useState('https://api.34-228-25-198.nip.io');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,19 +38,27 @@ export function LoginScreen({ onLogin }: Props) {
 
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.brandBlock}>
-        <Text style={styles.brand}>SERVILION</Text>
-        <Text style={styles.product}>ENTREGAS EN FAENA</Text>
-      </View>
-      <View style={styles.form}>
-        <Text style={styles.heading}>Ingreso operativo</Text>
-        <Text style={styles.caption}>La sesión queda protegida en este equipo para seguir trabajando sin señal.</Text>
-        <Field icon={Server} label="Servidor" value={apiUrl} onChangeText={setApiUrl} autoCapitalize="none" />
-        <Field icon={UserRound} label="Usuario" value={username} onChangeText={setUsername} autoCapitalize="none" />
-        <Field icon={LockKeyhole} label="Contraseña" value={password} onChangeText={setPassword} secureTextEntry />
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-        <Button label="Ingresar" onPress={submit} loading={loading} />
-      </View>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
+        <View style={styles.brandBlock}>
+          <View style={styles.brandIcon}><WashingMachine size={25} color={colors.surface} /></View>
+          <View>
+            <Text style={styles.brand}>Servilion</Text>
+            <Text style={styles.product}>Lavandería industrial</Text>
+          </View>
+        </View>
+        <View style={styles.intro}>
+          <Text style={styles.heading}>Entregas en faena</Text>
+          <Text style={styles.caption}>Ingresa para registrar entregas, incluso cuando estés sin conexión.</Text>
+        </View>
+        <View style={styles.form}>
+          <Field icon={Server} label="Servidor" value={apiUrl} onChangeText={setApiUrl} autoCapitalize="none" />
+          <Field icon={UserRound} label="Usuario" value={username} onChangeText={setUsername} autoCapitalize="none" />
+          <Field icon={LockKeyhole} label="Contraseña" value={password} onChangeText={setPassword} secureTextEntry />
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+          <Button label="Ingresar" onPress={submit} loading={loading} />
+        </View>
+        <Text style={styles.footer}>La sesión y el catálogo se guardan de forma segura en este equipo.</Text>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -82,13 +90,16 @@ function Field({ icon: Icon, label, ...inputProps }: FieldProps) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, justifyContent: 'space-between', backgroundColor: colors.paper },
-  brandBlock: { backgroundColor: colors.ink, paddingTop: 78, paddingBottom: 38, paddingHorizontal: 24 },
-  brand: { color: colors.lime, fontFamily: fonts.display, fontSize: 52, lineHeight: 52 },
-  product: { color: colors.surface, fontFamily: fonts.bodyMedium, fontSize: 14 },
-  form: { padding: 24, paddingBottom: 42, gap: 15 },
-  heading: { color: colors.ink, fontFamily: fonts.display, fontSize: 35 },
-  caption: { color: colors.inkSoft, fontFamily: fonts.body, fontSize: 16, lineHeight: 22, marginBottom: 4 },
+  screen: { flex: 1, backgroundColor: colors.paper },
+  content: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 20, paddingVertical: 28 },
+  brandBlock: { flexDirection: 'row', alignItems: 'center', gap: 11, marginBottom: 40 },
+  brandIcon: { width: 46, height: 46, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary },
+  brand: { color: colors.ink, fontFamily: fonts.display, fontSize: 23, lineHeight: 25 },
+  product: { color: colors.muted, fontFamily: fonts.bodyMedium, fontSize: 13 },
+  intro: { marginBottom: 20 },
+  form: { padding: 20, gap: 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, borderRadius: 14, shadowColor: colors.shadow, shadowOpacity: 0.06, shadowRadius: 14, shadowOffset: { width: 0, height: 5 }, elevation: 2 },
+  heading: { color: colors.ink, fontFamily: fonts.display, fontSize: 31, lineHeight: 36 },
+  caption: { color: colors.inkSoft, fontFamily: fonts.body, fontSize: 16, lineHeight: 22, marginTop: 4 },
   label: { color: colors.inkSoft, fontFamily: fonts.bodyMedium, fontSize: 13, marginBottom: 5 },
   inputWrap: {
     minHeight: 52,
@@ -99,8 +110,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: 5,
+    borderRadius: 9,
   },
   input: { flex: 1, color: colors.ink, fontFamily: fonts.body, fontSize: 17 },
-  error: { color: '#9B311D', backgroundColor: colors.coralSoft, padding: 10, borderRadius: 4, fontFamily: fonts.bodyMedium },
+  error: { color: colors.danger, backgroundColor: colors.dangerSoft, padding: 10, borderRadius: 8, fontFamily: fonts.bodyMedium },
+  footer: { color: colors.muted, fontFamily: fonts.body, fontSize: 13, lineHeight: 18, textAlign: 'center', marginTop: 20, paddingHorizontal: 16 },
 });

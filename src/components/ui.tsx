@@ -24,6 +24,7 @@ export function Button({
     ? styles.primary
     : variant === 'danger' ? styles.danger : styles.secondary;
   const textPalette = variant === 'secondary' ? styles.secondaryText : styles.primaryText;
+  const contentColor = variant === 'secondary' ? colors.ink : colors.surface;
 
   return (
     <Pressable
@@ -33,10 +34,10 @@ export function Button({
       style={({ pressed }) => [styles.button, palette, (pressed || disabled) && styles.buttonMuted]}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'secondary' ? colors.ink : colors.ink} />
+        <ActivityIndicator color={contentColor} />
       ) : (
         <>
-          {Icon ? <Icon size={20} color={variant === 'secondary' ? colors.ink : colors.ink} /> : null}
+          {Icon ? <Icon size={20} color={contentColor} /> : null}
           <Text style={[styles.buttonText, textPalette]} numberOfLines={2}>{label}</Text>
         </>
       )}
@@ -47,7 +48,7 @@ export function Button({
 export function StatusTag({ online }: { online: boolean }) {
   return (
     <View style={[styles.tag, online ? styles.online : styles.offline]}>
-      <View style={[styles.dot, { backgroundColor: online ? colors.green : colors.amber }]} />
+      <View style={[styles.dot, { backgroundColor: online ? colors.success : colors.warning }]} />
       <Text style={styles.tagText}>{online ? 'Con conexión' : 'Modo offline'}</Text>
     </View>
   );
@@ -55,8 +56,8 @@ export function StatusTag({ online }: { online: boolean }) {
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 54,
-    borderRadius: 6,
+    minHeight: 52,
+    borderRadius: 10,
     paddingHorizontal: 18,
     paddingVertical: 12,
     flexDirection: 'row',
@@ -64,12 +65,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 9,
   },
-  primary: { backgroundColor: colors.lime },
+  primary: { backgroundColor: colors.primary },
   secondary: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
-  danger: { backgroundColor: colors.coral },
+  danger: { backgroundColor: colors.danger },
   buttonMuted: { opacity: 0.55 },
   buttonText: { fontFamily: fonts.bodyMedium, fontSize: 17, textAlign: 'center' },
-  primaryText: { color: colors.ink },
+  primaryText: { color: colors.surface },
   secondaryText: { color: colors.ink },
   tag: {
     minHeight: 30,
@@ -79,8 +80,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  online: { backgroundColor: colors.greenSoft },
-  offline: { backgroundColor: colors.amberSoft },
+  online: { backgroundColor: colors.successSoft },
+  offline: { backgroundColor: colors.warningSoft },
   dot: { width: 7, height: 7, borderRadius: 4 },
   tagText: { color: colors.inkSoft, fontFamily: fonts.bodyMedium, fontSize: 13 },
 });
