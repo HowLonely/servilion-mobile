@@ -6,6 +6,10 @@ export type User = {
   first_name: string;
   last_name: string;
   role: string;
+  /** Nombre visible del rol; los roles se editan en la web y en la terminal. */
+  role_name?: string;
+  /** Permisos del rol (`authentication/permissions.py`). */
+  permissions?: string[];
 };
 
 export type Session = {
