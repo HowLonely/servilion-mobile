@@ -78,3 +78,89 @@ export type DeliveryPayload = {
   note: string;
   confirm_different_room: boolean;
 };
+// --- Hotelería ---------------------------------------------------------------
+//
+// La lencería de hotelería es un stock del cliente que rota entre la planta y
+// sus campamentos. Desde esta app se registran los dos movimientos que ocurren
+// en faena: el REPARTO de lo limpio a un campamento y el RETIRO del sucio.
+
+export type LinenKind = 'REPARTO' | 'RETIRO';
+
+export type LinenType = { id: number; code: string; name: string };
+
+export type LinenBalanceLine = { garment_type_id: number; quantity: number };
+
+/** Una fila del saldo del servidor (`BalanceLocationOut`). */
+export type LinenLocation = {
+  kind: 'SERVILION' | 'BODEGA_FAENA' | 'CAMPAMENTO';
+  camp_id: number | null;
+  name: string;
+  lines: LinenBalanceLine[];
+  total: number;
+  has_negative: boolean;
+  last_counted_at: string | null;
+};
+
+/** Saldo de un cliente de hotelería tal como lo entrega `/api/hospitality/balances`. */
+export type LinenCompanyBalance = {
+  company_id: number;
+  company_name: string;
+  faena_name: string;
+  linen_types: LinenType[];
+  locations: LinenLocation[];
+};
+
+export type LinenLine = { garment_type_id: number; quantity: number };
+
+/**
+ * Estado de un movimiento en la cola del teléfono.
+ *
+ * REJECTED es distinto de FAILED: el servidor lo rechazó por una regla del
+ * negocio (campamento ajeno, tipo que ya no es de hotelería) y reintentarlo no
+ * lo va a arreglar. FAILED es un problema de red y se reintenta solo.
+ */
+export type LinenMovementState = 'PENDING' | 'FAILED' | 'SYNCED' | 'REJECTED';
+
+export type LinenMovementRecord = {
+  client_uuid: string;
+  kind: LinenKind;
+  company_id: number;
+  company_name: string;
+  camp_id: number;
+  camp_name: string;
+  /** JSON de `LinenLine[]`, con el nombre de cada tipo para el historial. */
+  lines_json: string;
+  total_quantity: number;
+  latitude: number;
+  longitude: number;
+  accuracy_meters: number;
+  occurred_at: string;
+  note: string;
+  state: LinenMovementState;
+  attempt_count: number;
+  last_error: string | null;
+  created_at: string;
+  synced_at: string | null;
+};
+
+export type StoredLinenLine = LinenLine & { name: string };
+
+export type LinenMovementPayload = {
+  client_uuid: string;
+  kind: LinenKind;
+  company_id: number;
+  camp_id: number;
+  lines: LinenLine[];
+  occurred_at: string;
+  latitude: number;
+  longitude: number;
+  accuracy_meters: number;
+  note: string;
+};
+
+export type LinenSyncResult = {
+  client_uuid: string;
+  status: 'CREADO' | 'DUPLICADO' | 'ERROR';
+  movement_id: number | null;
+  detail: string;
+};

@@ -19,7 +19,7 @@ export function SettingsScreen({ session, lastSync, onLogout }: { session: Sessi
       </View>
       <View style={styles.policy}>
         <Text style={styles.policyTitle}>Almacenamiento offline</Text>
-        <Text style={styles.policyText}>Las órdenes y habitaciones se descargan antes de la ruta. Las entregas enviadas se conservan 30 días; las pendientes nunca se eliminan.</Text>
+        <Text style={styles.policyText}>Las órdenes, habitaciones y saldos de lencería se descargan antes de la ruta. Las entregas y movimientos de lencería enviados se conservan 30 días; los pendientes nunca se eliminan.</Text>
       </View>
       <Button label="Cerrar sesión" icon={LogOut} variant="danger" onPress={onLogout} />
     </ScrollView>

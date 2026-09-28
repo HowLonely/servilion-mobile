@@ -9,15 +9,22 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { clearSession, loadSession } from './src/session';
-import { getLastCatalogSync, getPendingCount, initializeDatabase, listDeliveries } from './src/database';
+import { getLastCatalogSync, getPendingCount, initializeDatabase, listDeliveries, listLinenMovements } from './src/database';
 import { DeliveryScreen } from './src/screens/DeliveryScreen';
 import { HistoryScreen } from './src/screens/HistoryScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
+import { LinenScreen } from './src/screens/LinenScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
-import { isOnline, refreshCatalog, syncPendingDeliveries } from './src/sync';
+import {
+  isOnline,
+  refreshCatalog,
+  refreshLinenBalances,
+  syncPendingDeliveries,
+  syncPendingLinenMovements,
+} from './src/sync';
 import { colors, fonts } from './src/theme';
-import type { DeliveryRecord, Session } from './src/types';
+import type { DeliveryRecord, LinenMovementRecord, Session } from './src/types';
 
 type Tab = 'HOME' | 'HISTORY' | 'SETTINGS';
 
@@ -31,22 +38,26 @@ function AppContent() {
   const [session, setSession] = useState<Session | null>(null);
   const [tab, setTab] = useState<Tab>('HOME');
   const [delivering, setDelivering] = useState(false);
+  const [registeringLinen, setRegisteringLinen] = useState(false);
   const [online, setOnline] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState('');
   const [pendingCount, setPendingCount] = useState(0);
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([]);
+  const [linenMovements, setLinenMovements] = useState<LinenMovementRecord[]>([]);
 
   const reloadLocalState = async () => {
-    const [pending, syncedAt, recent] = await Promise.all([
+    const [pending, syncedAt, recent, recentLinen] = await Promise.all([
       getPendingCount(),
       getLastCatalogSync(),
       listDeliveries(),
+      listLinenMovements(),
     ]);
     setPendingCount(pending);
     setLastSync(syncedAt);
     setDeliveries(recent);
+    setLinenMovements(recentLinen);
   };
 
   useEffect(() => {
@@ -76,7 +87,15 @@ function AppContent() {
     setSyncError('');
     try {
       const sent = await syncPendingDeliveries(session);
-      const refreshedSession = await refreshCatalog(sent.session);
+      const linen = await syncPendingLinenMovements(sent.session);
+      let refreshedSession = await refreshCatalog(linen.session);
+      // La lencería va aparte y no corta la sincronización de entregas: si el
+      // saldo no baja, se sigue trabajando con el último descargado.
+      try {
+        refreshedSession = await refreshLinenBalances(refreshedSession);
+      } catch (caught) {
+        setSyncError(caught instanceof Error ? `Saldos de lencería: ${caught.message}` : 'No se pudieron descargar los saldos de lencería.');
+      }
       setSession(refreshedSession);
       await reloadLocalState();
     } catch (caught) {
@@ -102,6 +121,21 @@ function AppContent() {
       <SafeAreaView style={styles.app} edges={['top', 'right', 'bottom', 'left']}>
         <StatusBar style="dark" />
         <LoginScreen onLogin={(value) => { setSession(value); setOnline(true); }} />
+      </SafeAreaView>
+    );
+  }
+
+  if (registeringLinen) {
+    return (
+      <SafeAreaView style={styles.app} edges={['top', 'right', 'bottom', 'left']}>
+        <StatusBar style="dark" />
+        <LinenScreen
+          session={session}
+          online={online}
+          onSessionChange={setSession}
+          onClose={() => setRegisteringLinen(false)}
+          onSaved={() => { void reloadLocalState(); }}
+        />
       </SafeAreaView>
     );
   }
@@ -134,10 +168,16 @@ function AppContent() {
             syncing={syncing}
             syncError={syncError}
             onScan={() => setDelivering(true)}
+            onLinen={() => setRegisteringLinen(true)}
             onSync={() => { void runSync(); }}
           />
         ) : tab === 'HISTORY' ? (
-          <HistoryScreen deliveries={deliveries} refreshing={syncing} onRefresh={() => { void runSync(); }} />
+          <HistoryScreen
+            deliveries={deliveries}
+            linenMovements={linenMovements}
+            refreshing={syncing}
+            onRefresh={() => { void runSync(); }}
+          />
         ) : (
           <SettingsScreen session={session} lastSync={lastSync} onLogout={() => { void logout(); }} />
         )}

@@ -1,14 +1,27 @@
-import { AlertCircle, CheckCircle2, Clock3 } from 'lucide-react-native';
+import { AlertCircle, Ban, CheckCircle2, Clock3 } from 'lucide-react-native';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { parseLines } from '../linen';
 import { colors, fonts } from '../theme';
-import type { DeliveryRecord } from '../types';
+import type { DeliveryRecord, LinenMovementRecord, LinenMovementState } from '../types';
 
-export function HistoryScreen({ deliveries, refreshing, onRefresh }: {
+type Entry =
+  | { type: 'DELIVERY'; at: string; record: DeliveryRecord }
+  | { type: 'LINEN'; at: string; record: LinenMovementRecord };
+
+export function HistoryScreen({ deliveries, linenMovements, refreshing, onRefresh }: {
   deliveries: DeliveryRecord[];
+  linenMovements: LinenMovementRecord[];
   refreshing: boolean;
   onRefresh: () => void;
 }) {
+  // Una sola lista por fecha: el supervisor recorre su turno en el orden en que
+  // lo hizo, sin tener que saltar entre entregas y lencería.
+  const entries: Entry[] = [
+    ...deliveries.map((record): Entry => ({ type: 'DELIVERY', at: record.delivered_at, record })),
+    ...linenMovements.map((record): Entry => ({ type: 'LINEN', at: record.occurred_at, record })),
+  ].sort((a, b) => b.at.localeCompare(a.at));
+
   return (
     <ScrollView
       contentContainerStyle={styles.content}
@@ -16,34 +29,70 @@ export function HistoryScreen({ deliveries, refreshing, onRefresh }: {
     >
       <View style={styles.header}>
         <Text style={styles.kicker}>TRABAJO LOCAL</Text>
-        <Text style={styles.title}>Entregas recientes</Text>
-        <Text style={styles.subtitle}>Registros guardados durante los últimos 30 días.</Text>
+        <Text style={styles.title}>Registros recientes</Text>
+        <Text style={styles.subtitle}>Entregas y lencería guardadas durante los últimos 30 días.</Text>
       </View>
-      {deliveries.length === 0 ? (
-        <View style={styles.empty}><View style={styles.emptyIcon}><Clock3 size={28} color={colors.primary} /></View><Text style={styles.emptyTitle}>Sin entregas todavía</Text><Text style={styles.emptyText}>Los registros aparecerán aquí después de confirmar una entrega.</Text></View>
-      ) : deliveries.map((delivery) => (
-        <View key={delivery.client_uuid} style={styles.row}>
-          <View style={[styles.stateBar, delivery.state === 'SYNCED' ? styles.synced : delivery.state === 'FAILED' ? styles.failed : styles.pending]} />
-          <View style={styles.rowBody}>
-            <View style={styles.rowTop}>
-              <Text style={styles.code}>{delivery.order_code}</Text>
-              <State state={delivery.state} />
-            </View>
-            <Text style={styles.person}>{delivery.worker_name}</Text>
-            <Text style={styles.meta}>{delivery.company_name} · {delivery.delivery_flow === 'FLUJO_1' ? delivery.scanned_room_label : 'Entrega al cliente'}</Text>
-            <Text style={styles.time}>{formatDate(delivery.delivered_at)}</Text>
-            {delivery.last_error ? <Text style={styles.error}>{delivery.last_error}</Text> : null}
-          </View>
-        </View>
+      {entries.length === 0 ? (
+        <View style={styles.empty}><View style={styles.emptyIcon}><Clock3 size={28} color={colors.primary} /></View><Text style={styles.emptyTitle}>Sin registros todavía</Text><Text style={styles.emptyText}>Aparecerán aquí después de confirmar una entrega o un movimiento de lencería.</Text></View>
+      ) : entries.map((entry) => (
+        entry.type === 'DELIVERY'
+          ? <DeliveryRow key={entry.record.client_uuid} delivery={entry.record} />
+          : <LinenRow key={entry.record.client_uuid} movement={entry.record} />
       ))}
     </ScrollView>
   );
 }
 
-function State({ state }: { state: DeliveryRecord['state'] }) {
-  const Icon = state === 'SYNCED' ? CheckCircle2 : state === 'FAILED' ? AlertCircle : Clock3;
-  const label = state === 'SYNCED' ? 'Enviada' : state === 'FAILED' ? 'Reintentar' : 'Pendiente';
-  return <View style={styles.state}><Icon size={15} color={state === 'SYNCED' ? colors.success : state === 'FAILED' ? colors.danger : colors.warning} /><Text style={styles.stateText}>{label}</Text></View>;
+function DeliveryRow({ delivery }: { delivery: DeliveryRecord }) {
+  return (
+    <View style={styles.row}>
+      <View style={[styles.stateBar, barStyle(delivery.state)]} />
+      <View style={styles.rowBody}>
+        <View style={styles.rowTop}>
+          <Text style={styles.code}>{delivery.order_code}</Text>
+          <State state={delivery.state} />
+        </View>
+        <Text style={styles.person}>{delivery.worker_name}</Text>
+        <Text style={styles.meta}>{delivery.company_name} · {delivery.delivery_flow === 'FLUJO_1' ? delivery.scanned_room_label : 'Entrega al cliente'}</Text>
+        <Text style={styles.time}>{formatDate(delivery.delivered_at)}</Text>
+        {delivery.last_error ? <Text style={styles.error}>{delivery.last_error}</Text> : null}
+      </View>
+    </View>
+  );
+}
+
+function LinenRow({ movement }: { movement: LinenMovementRecord }) {
+  const detail = parseLines(movement.lines_json)
+    .map((line) => `${line.name} ${line.quantity}`)
+    .join(' · ');
+  return (
+    <View style={styles.row}>
+      <View style={[styles.stateBar, barStyle(movement.state)]} />
+      <View style={styles.rowBody}>
+        <View style={styles.rowTop}>
+          <Text style={styles.code}>{movement.kind === 'REPARTO' ? 'Reparto' : 'Retiro'} · {movement.total_quantity}</Text>
+          <State state={movement.state} />
+        </View>
+        <Text style={styles.person}>{movement.camp_name}</Text>
+        <Text style={styles.meta}>{movement.company_name} · {detail}</Text>
+        <Text style={styles.time}>{formatDate(movement.occurred_at)}</Text>
+        {movement.last_error ? <Text style={styles.error}>{movement.last_error}</Text> : null}
+      </View>
+    </View>
+  );
+}
+
+function barStyle(state: LinenMovementState) {
+  if (state === 'SYNCED') return styles.synced;
+  if (state === 'FAILED' || state === 'REJECTED') return styles.failed;
+  return styles.pending;
+}
+
+function State({ state }: { state: LinenMovementState }) {
+  const Icon = state === 'SYNCED' ? CheckCircle2 : state === 'REJECTED' ? Ban : state === 'FAILED' ? AlertCircle : Clock3;
+  const label = state === 'SYNCED' ? 'Enviado' : state === 'REJECTED' ? 'Rechazado' : state === 'FAILED' ? 'Reintentar' : 'Pendiente';
+  const color = state === 'SYNCED' ? colors.success : state === 'FAILED' || state === 'REJECTED' ? colors.danger : colors.warning;
+  return <View style={styles.state}><Icon size={15} color={color} /><Text style={styles.stateText}>{label}</Text></View>;
 }
 
 function formatDate(value: string): string {
