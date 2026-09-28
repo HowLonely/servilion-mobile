@@ -1,4 +1,4 @@
-import { MapPinCheck, RefreshCw, ScanLine, ShieldCheck, WifiOff } from 'lucide-react-native';
+import { BedDouble, ChevronRight, MapPinCheck, RefreshCw, ScanLine, ShieldCheck, WifiOff } from 'lucide-react-native';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button, StatusTag } from '../components/ui';
@@ -13,6 +13,7 @@ type Props = {
   syncing: boolean;
   syncError: string;
   onScan: () => void;
+  onLinen: () => void;
   onSync: () => void;
 };
 
@@ -24,6 +25,7 @@ export function HomeScreen({
   syncing,
   syncError,
   onScan,
+  onLinen,
   onSync,
 }: Props) {
   const name = session.user.first_name || session.user.username;
@@ -45,6 +47,15 @@ export function HomeScreen({
         </View>
       </Pressable>
 
+      <Pressable accessibilityRole="button" onPress={onLinen} style={({ pressed }) => [styles.linenAction, pressed && styles.pressed]}>
+        <View style={styles.linenIcon}><BedDouble size={26} color={colors.primary} /></View>
+        <View style={styles.scanCopy}>
+          <Text style={styles.linenTitle}>Lencería de hotelería</Text>
+          <Text style={styles.linenSubtitle}>Repartir limpio o retirar sucio en un campamento</Text>
+        </View>
+        <ChevronRight size={22} color={colors.muted} />
+      </Pressable>
+
       <View style={styles.metrics}>
         <View style={styles.metric}>
           <Text style={styles.metricValue}>{pendingCount}</Text>
@@ -64,8 +75,8 @@ export function HomeScreen({
             <Text style={styles.statusTitle}>{online ? 'Listo para sincronizar' : 'Puedes seguir entregando'}</Text>
             <Text style={styles.body}>
               {online
-                ? 'Las entregas se envían al servidor al terminar.'
-                : 'Cada entrega queda en SQLite con hora y GPS hasta recuperar señal.'}
+                ? 'Las entregas y la lencería se envían al servidor al terminar.'
+                : 'Cada entrega y movimiento de lencería queda en el equipo con hora y GPS hasta recuperar señal.'}
             </Text>
           </View>
         </View>
@@ -103,6 +114,10 @@ const styles = StyleSheet.create({
   scanCopy: { flex: 1 },
   scanTitle: { color: colors.surface, fontFamily: fonts.display, fontSize: 27, lineHeight: 31 },
   scanSubtitle: { color: colors.primarySoft, fontFamily: fonts.bodyMedium, fontSize: 15, lineHeight: 20, marginTop: 5 },
+  linenAction: { marginHorizontal: 16, marginTop: 12, minHeight: 76, padding: 14, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  linenIcon: { width: 48, height: 48, borderRadius: 10, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  linenTitle: { color: colors.ink, fontFamily: fonts.display, fontSize: 19 },
+  linenSubtitle: { color: colors.muted, fontFamily: fonts.body, fontSize: 14, lineHeight: 18 },
   metrics: { marginTop: 14, paddingHorizontal: 16, flexDirection: 'row', gap: 10 },
   metric: { flex: 1, minHeight: 102, padding: 15, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, borderRadius: 10 },
   metricValue: { color: colors.ink, fontFamily: fonts.display, fontSize: 26 },

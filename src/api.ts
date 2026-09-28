@@ -1,5 +1,15 @@
 import { saveSession } from './session';
-import type { CachedOrder, CachedRoom, DeliveryPayload, Page, Session, User } from './types';
+import type {
+  CachedOrder,
+  CachedRoom,
+  DeliveryPayload,
+  LinenCompanyBalance,
+  LinenMovementPayload,
+  LinenSyncResult,
+  Page,
+  Session,
+  User,
+} from './types';
 
 type TokenResponse = { access: string; refresh: string; user: User };
 type ApiResult<T> = { data: T; session: Session };
@@ -131,5 +141,26 @@ export async function sendDelivery(session: Session, payload: DeliveryPayload): 
   return apiRequest<unknown>(session, '/api/delivery/confirm', {
     method: 'POST',
     body: JSON.stringify(payload),
+  });
+}
+/** Saldo de lencería de todos los clientes de hotelería, para trabajar sin señal. */
+export async function fetchLinenBalances(session: Session): Promise<ApiResult<LinenCompanyBalance[]>> {
+  return apiRequest<LinenCompanyBalance[]>(session, '/api/hospitality/balances');
+}
+
+/**
+ * Envía un tramo de la cola de repartos y retiros.
+ *
+ * El servidor resuelve cada movimiento por separado: uno rechazado no bloquea
+ * al resto, y uno que ya tenía (se perdió la respuesta anterior) vuelve como
+ * DUPLICADO, que para el teléfono es lo mismo que enviado.
+ */
+export async function sendLinenMovements(
+  session: Session,
+  movements: LinenMovementPayload[],
+): Promise<ApiResult<{ results: LinenSyncResult[] }>> {
+  return apiRequest<{ results: LinenSyncResult[] }>(session, '/api/hospitality/field-sync', {
+    method: 'POST',
+    body: JSON.stringify({ movements }),
   });
 }

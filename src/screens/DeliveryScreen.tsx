@@ -1,5 +1,4 @@
 import { randomUUID } from 'expo-crypto';
-import * as Location from 'expo-location';
 import { AlertTriangle, Building2, CheckCircle2, LocateFixed, MapPin, PackageCheck } from 'lucide-react-native';
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -8,6 +7,7 @@ import { fetchOrderByCode } from '../api';
 import { QrScanner } from '../components/QrScanner';
 import { Button } from '../components/ui';
 import { findCachedOrder, findCachedRoom, insertDelivery, upsertCachedOrder } from '../database';
+import { getPreciseLocation } from '../location';
 import { isOnline, syncPendingDeliveries } from '../sync';
 import { colors, fonts } from '../theme';
 import type { CachedOrder, CachedRoom, DeliveryRecord, Session } from '../types';
@@ -65,13 +65,7 @@ export function DeliveryScreen({ session, online, onSessionChange, onClose, onSa
     setStage('LOCATING');
     setError('');
     try {
-      const permission = await Location.requestForegroundPermissionsAsync();
-      if (!permission.granted) throw new Error('La ubicación precisa es obligatoria para registrar la entrega.');
-      if (!(await Location.hasServicesEnabledAsync())) throw new Error('Activa la ubicación del teléfono para continuar.');
-      const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-      if (!position.coords.accuracy || position.coords.accuracy <= 0) {
-        throw new Error('No fue posible obtener la precisión de la ubicación. Inténtalo nuevamente.');
-      }
+      const position = await getPreciseLocation();
 
       const mismatched = order.delivery_flow === 'FLUJO_1' && order.delivery_room_id !== room?.id;
       const now = new Date().toISOString();
@@ -85,9 +79,9 @@ export function DeliveryScreen({ session, online, onSessionChange, onClose, onSa
         room_qr: room?.qr_code ?? null,
         scanned_room_label: room ? `${room.camp_name} · ${room.number}` : null,
         confirm_different_room: mismatched ? 1 : 0,
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy_meters: position.coords.accuracy,
+        latitude: position.latitude,
+        longitude: position.longitude,
+        accuracy_meters: position.accuracy_meters,
         delivered_at: now,
         note: '',
         state: 'PENDING',

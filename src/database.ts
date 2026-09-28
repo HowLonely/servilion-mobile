@@ -1,6 +1,12 @@
 import * as SQLite from 'expo-sqlite';
 
-import type { CachedOrder, CachedRoom, DeliveryRecord } from './types';
+import type {
+  CachedOrder,
+  CachedRoom,
+  DeliveryRecord,
+  LinenCompanyBalance,
+  LinenMovementRecord,
+} from './types';
 
 const RETENTION_DAYS = 30;
 const databasePromise = SQLite.openDatabaseAsync('servilion-entregas.db');
@@ -62,6 +68,31 @@ export async function initializeDatabase(): Promise<void> {
     );
     CREATE INDEX IF NOT EXISTS deliveries_state_created
       ON deliveries(state, created_at);
+
+    -- Cola de repartos y retiros de lencería. Mismo criterio que las entregas:
+    -- el client_uuid nace aquí y se reutiliza en cada reintento.
+    CREATE TABLE IF NOT EXISTS linen_movements (
+      client_uuid TEXT PRIMARY KEY NOT NULL,
+      kind TEXT NOT NULL,
+      company_id INTEGER NOT NULL,
+      company_name TEXT NOT NULL,
+      camp_id INTEGER NOT NULL,
+      camp_name TEXT NOT NULL,
+      lines_json TEXT NOT NULL,
+      total_quantity INTEGER NOT NULL,
+      latitude REAL NOT NULL,
+      longitude REAL NOT NULL,
+      accuracy_meters REAL NOT NULL,
+      occurred_at TEXT NOT NULL,
+      note TEXT NOT NULL DEFAULT '',
+      state TEXT NOT NULL DEFAULT 'PENDING',
+      attempt_count INTEGER NOT NULL DEFAULT 0,
+      last_error TEXT,
+      created_at TEXT NOT NULL,
+      synced_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS linen_movements_state_created
+      ON linen_movements(state, created_at);
 
     CREATE TABLE IF NOT EXISTS metadata (
       key TEXT PRIMARY KEY NOT NULL,
@@ -190,9 +221,12 @@ export async function markDeliveryFailed(clientUuid: string, error: string): Pro
   );
 }
 
+/** Entregas y movimientos de lencería que todavía no llegan al servidor. */
 export async function getPendingCount(): Promise<number> {
   const row = await (await databasePromise).getFirstAsync<{ count: number }>(
-    "SELECT COUNT(*) AS count FROM deliveries WHERE state IN ('PENDING', 'FAILED')",
+    `SELECT
+       (SELECT COUNT(*) FROM deliveries WHERE state IN ('PENDING', 'FAILED')) +
+       (SELECT COUNT(*) FROM linen_movements WHERE state IN ('PENDING', 'FAILED')) AS count`,
   );
   return row?.count ?? 0;
 }
@@ -209,5 +243,113 @@ export async function purgeExpiredDeliveries(): Promise<void> {
   await (await databasePromise).runAsync(
     "DELETE FROM deliveries WHERE state = 'SYNCED' AND synced_at < ?",
     cutoff,
+  );
+  // Los rechazados también se purgan: ya los vio el supervisor en el
+  // historial y no hay nada que reintentar.
+  await (await databasePromise).runAsync(
+    "DELETE FROM linen_movements WHERE state IN ('SYNCED', 'REJECTED') AND COALESCE(synced_at, created_at) < ?",
+    cutoff,
+  );
+}
+
+// --- Hotelería ---------------------------------------------------------------
+
+const LINEN_BALANCES_KEY = 'linen_balances';
+const LINEN_BALANCES_AT_KEY = 'linen_balances_at';
+
+/**
+ * Guarda el saldo de lencería descargado. Se guarda entero como JSON y no en
+ * tablas: son un puñado de clientes y campamentos, y siempre se lee completo.
+ */
+export async function replaceLinenBalances(balances: LinenCompanyBalance[]): Promise<void> {
+  const database = await databasePromise;
+  await database.withTransactionAsync(async () => {
+    for (const [key, value] of [
+      [LINEN_BALANCES_KEY, JSON.stringify(balances)],
+      [LINEN_BALANCES_AT_KEY, new Date().toISOString()],
+    ]) {
+      await database.runAsync(
+        `INSERT INTO metadata(key, value) VALUES (?, ?)
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+        key, value,
+      );
+    }
+  });
+}
+
+export async function getLinenBalances(): Promise<{
+  balances: LinenCompanyBalance[];
+  snapshotAt: string | null;
+}> {
+  const database = await databasePromise;
+  const [stored, at] = await Promise.all([
+    database.getFirstAsync<{ value: string }>('SELECT value FROM metadata WHERE key = ?', LINEN_BALANCES_KEY),
+    database.getFirstAsync<{ value: string }>('SELECT value FROM metadata WHERE key = ?', LINEN_BALANCES_AT_KEY),
+  ]);
+  let balances: LinenCompanyBalance[] = [];
+  try {
+    balances = stored ? JSON.parse(stored.value) as LinenCompanyBalance[] : [];
+  } catch {
+    balances = [];
+  }
+  return { balances, snapshotAt: at?.value ?? null };
+}
+
+export async function insertLinenMovement(movement: LinenMovementRecord): Promise<void> {
+  await (await databasePromise).runAsync(
+    `INSERT INTO linen_movements
+      (client_uuid, kind, company_id, company_name, camp_id, camp_name, lines_json,
+       total_quantity, latitude, longitude, accuracy_meters, occurred_at, note, state,
+       attempt_count, last_error, created_at, synced_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    movement.client_uuid, movement.kind, movement.company_id, movement.company_name,
+    movement.camp_id, movement.camp_name, movement.lines_json, movement.total_quantity,
+    movement.latitude, movement.longitude, movement.accuracy_meters, movement.occurred_at,
+    movement.note, movement.state, movement.attempt_count, movement.last_error,
+    movement.created_at, movement.synced_at,
+  );
+}
+
+export async function listLinenMovements(limit = 100): Promise<LinenMovementRecord[]> {
+  return (await databasePromise).getAllAsync<LinenMovementRecord>(
+    'SELECT * FROM linen_movements ORDER BY occurred_at DESC LIMIT ?',
+    limit,
+  );
+}
+
+export async function getLinenMovement(clientUuid: string): Promise<LinenMovementRecord | null> {
+  return (await databasePromise).getFirstAsync<LinenMovementRecord>(
+    'SELECT * FROM linen_movements WHERE client_uuid = ?',
+    clientUuid,
+  );
+}
+
+export async function listPendingLinenMovements(): Promise<LinenMovementRecord[]> {
+  return (await databasePromise).getAllAsync<LinenMovementRecord>(
+    "SELECT * FROM linen_movements WHERE state IN ('PENDING', 'FAILED') ORDER BY created_at ASC",
+  );
+}
+
+export async function markLinenMovementSynced(clientUuid: string): Promise<void> {
+  await (await databasePromise).runAsync(
+    "UPDATE linen_movements SET state = 'SYNCED', synced_at = ?, last_error = NULL WHERE client_uuid = ?",
+    new Date().toISOString(), clientUuid,
+  );
+}
+
+export async function markLinenMovementFailed(clientUuid: string, error: string): Promise<void> {
+  await (await databasePromise).runAsync(
+    `UPDATE linen_movements SET state = 'FAILED', attempt_count = attempt_count + 1,
+     last_error = ? WHERE client_uuid = ?`,
+    error.slice(0, 500), clientUuid,
+  );
+}
+
+/** El servidor lo rechazó por una regla del negocio: no se vuelve a enviar. */
+export async function markLinenMovementRejected(clientUuid: string, error: string): Promise<void> {
+  await (await databasePromise).runAsync(
+    `UPDATE linen_movements SET state = 'REJECTED', attempt_count = attempt_count + 1,
+     last_error = ?, synced_at = ? WHERE client_uuid = ?`,
+    error.slice(0, 500), new Date().toISOString(), clientUuid,
   );
 }
