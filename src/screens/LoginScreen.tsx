@@ -25,8 +25,16 @@ export function LoginScreen({ onLogin }: Props) {
     setError('');
     try {
       const session = await login(apiUrl, username, password);
-      if (!['SUPERVISOR', 'ADMIN'].includes(session.user.role)) {
-        throw new Error(`El rol ${session.user.role} no puede registrar entregas.`);
+      // Los roles son editables: lo que decide es el permiso de faena, no el
+      // nombre del rol. Un backend anterior a los permisos no los envía; ahí
+      // se mantiene la regla de siempre.
+      const permissions = session.user.permissions;
+      const canWorkInField = permissions
+        ? permissions.includes('field.orders') || permissions.includes('field.hospitality')
+        : ['SUPERVISOR', 'ADMIN'].includes(session.user.role);
+      if (!canWorkInField) {
+        const roleName = session.user.role_name || session.user.role;
+        throw new Error(`El rol ${roleName} no puede registrar entregas ni movimientos en faena.`);
       }
       onLogin(session);
     } catch (caught) {
