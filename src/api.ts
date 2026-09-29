@@ -143,7 +143,7 @@ export async function sendDelivery(session: Session, payload: DeliveryPayload): 
     body: JSON.stringify(payload),
   });
 }
-/** Saldo de lencería de todos los clientes de hotelería, para trabajar sin señal. */
+/** Saldo de hotelería de todos los clientes de hotelería, para trabajar sin señal. */
 export async function fetchLinenBalances(session: Session): Promise<ApiResult<LinenCompanyBalance[]>> {
   return apiRequest<LinenCompanyBalance[]>(session, '/api/hospitality/balances');
 }

@@ -7,11 +7,11 @@ Aplicación Android offline-first para registrar la entrega de morrales en faena
 - **Flujo 1, habitación:** escanea el QR de la boleta/OT y después el QR de la habitación. Si la puerta no coincide con el destino congelado en la guía, muestra ambas habitaciones y exige una segunda confirmación para registrar de todas maneras.
 - **Flujo 2, cliente:** escanea sólo el QR del morral, informa que la entrega es al cliente y registra el hito final sin habitación.
 - Ambos flujos exigen ubicación precisa. Sin permiso, GPS activo y una lectura con precisión disponible, la entrega no se guarda.
-- **Lencería de hotelería:** registra el *reparto* de lencería limpia a un campamento y el *retiro* del sucio. Se elige el tipo de movimiento, el campamento y las piezas por tipo; se muestra el saldo del campamento y se avisa (sin bloquear) si un retiro lo deja en negativo. También exige ubicación precisa.
+- **Hotelería:** registra el *reparto* de hotelería limpia a un campamento y el *retiro* del sucio. Se elige el tipo de movimiento, el campamento y las piezas por tipo; se muestra el saldo del campamento y se avisa (sin bloquear) si un retiro lo deja en negativo. También exige ubicación precisa.
 
-## Lencería de hotelería
+## Hotelería
 
-La lencería es un stock rotativo del cliente: la planta la despacha a la faena, el supervisor la reparte a los campamentos y retira el sucio. Esta app registra esos dos últimos movimientos, con o sin señal.
+La hotelería es un stock rotativo del cliente: la planta la despacha a la faena, el supervisor la reparte a los campamentos y retira el sucio. Esta app registra esos dos últimos movimientos, con o sin señal.
 
 - Al sincronizar se descarga el saldo de cada campamento (`GET /api/hospitality/balances`). En ruta, el saldo que se ve es ese más lo que el teléfono registró y el servidor todavía no tiene; lo ya enviado antes de la descarga no se vuelve a sumar.
 - Cada movimiento recibe su `client_uuid` al guardarse y se envía por lotes a `POST /api/hospitality/field-sync`. Si la respuesta se pierde, el reenvío vuelve como `DUPLICADO` y se da por enviado.
@@ -19,7 +19,7 @@ La lencería es un stock rotativo del cliente: la planta la despacha a la faena,
 
 ## Operación offline
 
-Al iniciar sesión con conexión, la app descarga todas las guías `DESPACHADA`, las habitaciones activas y los saldos de lencería de hotelería. La sesión JWT se guarda en `SecureStore`; el catálogo y las entregas se almacenan en SQLite.
+Al iniciar sesión con conexión, la app descarga todas las guías `DESPACHADA`, las habitaciones activas y los saldos de hotelería. La sesión JWT se guarda en `SecureStore`; el catálogo y las entregas se almacenan en SQLite.
 
 Cada entrega recibe un `client_uuid` antes de intentar enviarse. El mismo UUID se reutiliza en todos los reintentos, por lo que perder la respuesta del servidor no duplica el registro. Al recuperar conexión, la app envía primero la cola y luego refresca el catálogo.
 

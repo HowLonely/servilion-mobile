@@ -51,7 +51,7 @@ function movement(overrides: Partial<LinenMovementRecord>): LinenMovementRecord 
 
 const SNAPSHOT = '2026-09-28T12:00:00.000Z';
 
-describe('saldo local de lencería', () => {
+describe('saldo local de hotelería', () => {
   it('parte del saldo descargado', () => {
     const balance = campBalance(company, 5, [], SNAPSHOT);
     expect(balance.get(SHEET)).toBe(40);

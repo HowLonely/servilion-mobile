@@ -16,7 +16,7 @@ import {
 import { parseLines } from './linen';
 import type { DeliveryPayload, LinenMovementPayload, Session } from './types';
 
-// Cuántos movimientos de lencería viajan por petición. Un turno sin señal
+// Cuántos movimientos de hotelería viajan por petición. Un turno sin señal
 // junta decenas, no miles; el tope evita una sola petición gigante si alguna
 // vez se acumulan.
 const LINEN_BATCH_SIZE = 50;
@@ -71,7 +71,7 @@ export async function syncPendingDeliveries(session: Session): Promise<SyncSumma
   await purgeExpiredDeliveries();
   return { sent, failed, session: activeSession };
 }
-/** Baja el saldo de lencería para ver el de cada campamento sin señal. */
+/** Baja el saldo de hotelería para ver el de cada campamento sin señal. */
 export async function refreshLinenBalances(session: Session): Promise<Session> {
   const result = await fetchLinenBalances(session);
   await replaceLinenBalances(result.data);
@@ -81,7 +81,7 @@ export async function refreshLinenBalances(session: Session): Promise<Session> {
 export type LinenSyncSummary = SyncSummary & { rejected: number };
 
 /**
- * Envía la cola de repartos y retiros de lencería.
+ * Envía la cola de repartos y retiros de hotelería.
  *
  * Si la petición entera falla (red, servidor caído) los movimientos quedan
  * FAILED y se reintentan en la próxima sincronización. Si el servidor responde
@@ -125,7 +125,7 @@ export async function syncPendingLinenMovements(session: Session): Promise<Linen
         }
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'No se pudo sincronizar la lencería.';
+      const message = error instanceof Error ? error.message : 'No se pudo sincronizar la hotelería.';
       for (const movement of batch) await markLinenMovementFailed(movement.client_uuid, message);
       failed += batch.length;
       // Si falló una petición entera, las siguientes van a fallar igual.

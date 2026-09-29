@@ -5,7 +5,7 @@ import type {
 } from './types';
 
 /**
- * Saldo de lencería que ve el supervisor en faena, sin señal.
+ * Saldo de hotelería que ve el supervisor en faena, sin señal.
  *
  * El teléfono guarda el último saldo que bajó del servidor y, encima, aplica
  * lo que registró él mismo y el servidor todavía no tiene: así, después de

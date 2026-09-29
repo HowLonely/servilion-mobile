@@ -16,7 +16,7 @@ export function HistoryScreen({ deliveries, linenMovements, refreshing, onRefres
   onRefresh: () => void;
 }) {
   // Una sola lista por fecha: el supervisor recorre su turno en el orden en que
-  // lo hizo, sin tener que saltar entre entregas y lencería.
+  // lo hizo, sin tener que saltar entre entregas y hotelería.
   const entries: Entry[] = [
     ...deliveries.map((record): Entry => ({ type: 'DELIVERY', at: record.delivered_at, record })),
     ...linenMovements.map((record): Entry => ({ type: 'LINEN', at: record.occurred_at, record })),
@@ -30,10 +30,10 @@ export function HistoryScreen({ deliveries, linenMovements, refreshing, onRefres
       <View style={styles.header}>
         <Text style={styles.kicker}>TRABAJO LOCAL</Text>
         <Text style={styles.title}>Registros recientes</Text>
-        <Text style={styles.subtitle}>Entregas y lencería guardadas durante los últimos 30 días.</Text>
+        <Text style={styles.subtitle}>Entregas y hotelería guardadas durante los últimos 30 días.</Text>
       </View>
       {entries.length === 0 ? (
-        <View style={styles.empty}><View style={styles.emptyIcon}><Clock3 size={28} color={colors.primary} /></View><Text style={styles.emptyTitle}>Sin registros todavía</Text><Text style={styles.emptyText}>Aparecerán aquí después de confirmar una entrega o un movimiento de lencería.</Text></View>
+        <View style={styles.empty}><View style={styles.emptyIcon}><Clock3 size={28} color={colors.primary} /></View><Text style={styles.emptyTitle}>Sin registros todavía</Text><Text style={styles.emptyText}>Aparecerán aquí después de confirmar una entrega o un movimiento de hotelería.</Text></View>
       ) : entries.map((entry) => (
         entry.type === 'DELIVERY'
           ? <DeliveryRow key={entry.record.client_uuid} delivery={entry.record} />

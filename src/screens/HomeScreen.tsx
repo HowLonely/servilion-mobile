@@ -50,7 +50,7 @@ export function HomeScreen({
       <Pressable accessibilityRole="button" onPress={onLinen} style={({ pressed }) => [styles.linenAction, pressed && styles.pressed]}>
         <View style={styles.linenIcon}><BedDouble size={26} color={colors.primary} /></View>
         <View style={styles.scanCopy}>
-          <Text style={styles.linenTitle}>Lencería de hotelería</Text>
+          <Text style={styles.linenTitle}>Hotelería</Text>
           <Text style={styles.linenSubtitle}>Repartir limpio o retirar sucio en un campamento</Text>
         </View>
         <ChevronRight size={22} color={colors.muted} />
@@ -75,8 +75,8 @@ export function HomeScreen({
             <Text style={styles.statusTitle}>{online ? 'Listo para sincronizar' : 'Puedes seguir entregando'}</Text>
             <Text style={styles.body}>
               {online
-                ? 'Las entregas y la lencería se envían al servidor al terminar.'
-                : 'Cada entrega y movimiento de lencería queda en el equipo con hora y GPS hasta recuperar señal.'}
+                ? 'Las entregas y la hotelería se envían al servidor al terminar.'
+                : 'Cada entrega y movimiento de hotelería queda en el equipo con hora y GPS hasta recuperar señal.'}
             </Text>
           </View>
         </View>

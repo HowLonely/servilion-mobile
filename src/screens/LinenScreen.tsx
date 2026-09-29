@@ -40,19 +40,19 @@ type Props = {
 
 const KIND_COPY: Record<LinenKind, { title: string; verb: string; hint: string }> = {
   REPARTO: {
-    title: 'Repartir lencería limpia',
+    title: 'Repartir hotelería limpia',
     verb: 'Se entregan',
-    hint: 'Lencería limpia que dejas en el campamento.',
+    hint: 'Hotelería limpia que dejas en el campamento.',
   },
   RETIRO: {
-    title: 'Retirar lencería sucia',
+    title: 'Retirar hotelería sucia',
     verb: 'Se retiran',
-    hint: 'Lencería sucia que retiras del campamento para llevar a planta.',
+    hint: 'Hotelería sucia que retiras del campamento para llevar a planta.',
   },
 };
 
 /**
- * Reparto y retiro de lencería de hotelería en faena.
+ * Reparto y retiro de hotelería en faena.
  *
  * Funciona sin señal igual que las entregas: el movimiento queda en SQLite con
  * su hora y su GPS, y se envía al recuperar conexión. El saldo que se muestra
@@ -207,7 +207,7 @@ export function LinenScreen({ session, online, onSessionChange, onClose, onSaved
         <Text style={styles.bigTitle}>Sin datos de hotelería</Text>
         <Text style={[styles.body, styles.centerText]}>
           {online
-            ? 'Sincroniza desde el inicio para descargar los clientes, campamentos y tipos de lencería.'
+            ? 'Sincroniza desde el inicio para descargar los clientes, campamentos y tipos de hotelería.'
             : 'Conéctate y sincroniza antes de salir a ruta: el teléfono todavía no descarga los campamentos.'}
         </Text>
         <Button label="Volver al inicio" variant="secondary" onPress={onClose} />
@@ -256,7 +256,7 @@ export function LinenScreen({ session, online, onSessionChange, onClose, onSaved
           <ChevronLeft size={26} color={colors.ink} />
         </Pressable>
         <View style={styles.topCopy}>
-          <Text style={styles.eyebrow}>LENCERÍA DE HOTELERÍA</Text>
+          <Text style={styles.eyebrow}>HOTELERÍA DE HOTELERÍA</Text>
           <Text style={styles.topTitle} numberOfLines={1}>
             {stage === 'KIND' ? 'Qué vas a registrar' : KIND_COPY[kind].title}
           </Text>
@@ -269,13 +269,13 @@ export function LinenScreen({ session, online, onSessionChange, onClose, onSaved
             <KindOption
               icon={ArrowDownToLine}
               title="Reparto a campamento"
-              text="Dejas lencería limpia en un campamento."
+              text="Dejas hotelería limpia en un campamento."
               onPress={() => chooseKind('REPARTO')}
             />
             <KindOption
               icon={ArrowUpFromLine}
               title="Retiro de sucio"
-              text="Retiras lencería sucia de un campamento para llevar a planta."
+              text="Retiras hotelería sucia de un campamento para llevar a planta."
               onPress={() => chooseKind('RETIRO')}
             />
             {snapshotAt ? <Text style={styles.snapshot}>Saldos descargados el {formatTime(snapshotAt)}.</Text> : null}

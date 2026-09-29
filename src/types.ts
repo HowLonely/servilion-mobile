@@ -84,7 +84,7 @@ export type DeliveryPayload = {
 };
 // --- Hotelería ---------------------------------------------------------------
 //
-// La lencería de hotelería es un stock del cliente que rota entre la planta y
+// La hotelería es un stock del cliente que rota entre la planta y
 // sus campamentos. Desde esta app se registran los dos movimientos que ocurren
 // en faena: el REPARTO de lo limpio a un campamento y el RETIRO del sucio.
 

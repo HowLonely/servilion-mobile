@@ -89,12 +89,12 @@ function AppContent() {
       const sent = await syncPendingDeliveries(session);
       const linen = await syncPendingLinenMovements(sent.session);
       let refreshedSession = await refreshCatalog(linen.session);
-      // La lencería va aparte y no corta la sincronización de entregas: si el
+      // La hotelería va aparte y no corta la sincronización de entregas: si el
       // saldo no baja, se sigue trabajando con el último descargado.
       try {
         refreshedSession = await refreshLinenBalances(refreshedSession);
       } catch (caught) {
-        setSyncError(caught instanceof Error ? `Saldos de lencería: ${caught.message}` : 'No se pudieron descargar los saldos de lencería.');
+        setSyncError(caught instanceof Error ? `Saldos de hotelería: ${caught.message}` : 'No se pudieron descargar los saldos de hotelería.');
       }
       setSession(refreshedSession);
       await reloadLocalState();

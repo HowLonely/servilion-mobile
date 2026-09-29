@@ -5,7 +5,7 @@ export type PreciseLocation = { latitude: number; longitude: number; accuracy_me
 /**
  * Ubicación precisa para dejar evidencia de un registro en terreno.
  *
- * Es obligatoria en las entregas y en los movimientos de lencería: sin permiso,
+ * Es obligatoria en las entregas y en los movimientos de hotelería: sin permiso,
  * sin GPS activo o sin una precisión informada, el registro no se guarda.
  */
 export async function getPreciseLocation(): Promise<PreciseLocation> {

@@ -69,7 +69,7 @@ export async function initializeDatabase(): Promise<void> {
     CREATE INDEX IF NOT EXISTS deliveries_state_created
       ON deliveries(state, created_at);
 
-    -- Cola de repartos y retiros de lencería. Mismo criterio que las entregas:
+    -- Cola de repartos y retiros de hotelería. Mismo criterio que las entregas:
     -- el client_uuid nace aquí y se reutiliza en cada reintento.
     CREATE TABLE IF NOT EXISTS linen_movements (
       client_uuid TEXT PRIMARY KEY NOT NULL,
@@ -221,7 +221,7 @@ export async function markDeliveryFailed(clientUuid: string, error: string): Pro
   );
 }
 
-/** Entregas y movimientos de lencería que todavía no llegan al servidor. */
+/** Entregas y movimientos de hotelería que todavía no llegan al servidor. */
 export async function getPendingCount(): Promise<number> {
   const row = await (await databasePromise).getFirstAsync<{ count: number }>(
     `SELECT
@@ -258,7 +258,7 @@ const LINEN_BALANCES_KEY = 'linen_balances';
 const LINEN_BALANCES_AT_KEY = 'linen_balances_at';
 
 /**
- * Guarda el saldo de lencería descargado. Se guarda entero como JSON y no en
+ * Guarda el saldo de hotelería descargado. Se guarda entero como JSON y no en
  * tablas: son un puñado de clientes y campamentos, y siempre se lee completo.
  */
 export async function replaceLinenBalances(balances: LinenCompanyBalance[]): Promise<void> {
